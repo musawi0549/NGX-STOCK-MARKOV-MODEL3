@@ -1,13 +1,32 @@
-# NGX-STOCK-MARKOV-MODEL3
-Statistical modelling  of the Nigerian stock market (NGX) Using Discrete time Markov chains To predict State transitions and market stability 
-Modelling Stock Market State Transitions: A Case Study of the NGX
-Project Overview
-This project applies Stochastic Processes  to the Nigerian financial market. By utilizing  Discrete Time Markov Chains (DTMC) I analyzed historical stock data to calculate the probability of the market transitioning between three specific states Bull,Bear, and Stable.
-Key Features
-Data Cleaning: Processed raw NGX historical data using  SQL and Python.
-State Classification: Developed an algorithm to categorize daily market returns based on volatility thresholds.
-Transition Matrix: Constructed a probability matrix ($P$) to visualize the likelihood of market shifts.
-Steady State Analysis: Calculated the long run Stationary Distribution of the market.
- Mathematical Model
-The model assumes the Markov Property, where the probability of tomorrow's state depends solely on today's closing price.
-P(X_{n+1} = j | X_n = i) = p_{ij}
+import pandas as pd
+import numpy as np
+
+data = {
+    'Date': pd.date_range(start='2023-01-01', periods=12, freq='D'),
+    'Close_Price': [100.5, 102.1, 101.8, 101.8, 104.2, 103.5, 105.0, 107.2, 106.8, 106.8, 110.1, 109.5]
+}
+df = pd.DataFrame(data)
+
+df['Return'] = df['Close_Price'].pct_change()
+
+def classify_state(ret):
+    if pd.isna(ret):
+        return None
+    if ret > 0.002:
+        return 'Bull'
+    elif ret < -0.002:
+        return 'Bear'
+    else:
+        return 'Stable'
+
+df['Current_State'] = df['Return'].apply(classify_state)
+df['Next_State'] = df['Current_State'].shift(-1)
+
+states = df.dropna(subset=['Current_State', 'Next_State'])
+transition_matrix = pd.crosstab(
+    states['Current_State'],
+    states['Next_State'],
+    normalize='index'
+)
+
+print(transition_matrix)
